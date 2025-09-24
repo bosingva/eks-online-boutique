@@ -18,3 +18,10 @@ variable tags {
         App  = "eks-devsecops"
     }
 }
+
+variable "user_for_admin_role" {
+  description = "The ARN of the user that will be allowed to assume the admin role"
+  type        = string
+  default     = "arn:aws:iam::815254799658:user/dika"
+  
+}
