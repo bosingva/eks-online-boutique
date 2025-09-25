@@ -20,7 +20,7 @@ jobs:
       contents: read
     container:
       image: hashicorp/terraform:1.6.0
-    env:               # 👈 here
+    env:               
       TF_VAR_gitops_password: ${{ secrets.GITOPS_PASSWORD }}
 
     steps:
@@ -32,6 +32,11 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_DEFAULT_REGION }}  
+
+      - name: Install AWS CLI
+        run: |
+          apk add --no-cache python3 py3-pip groff less
+          pip3 install awscli      
 
       - name: Terraform Init
         run: terraform init
