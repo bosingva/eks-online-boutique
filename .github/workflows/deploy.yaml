@@ -9,7 +9,7 @@ on:
       - '.github/workflows/deploy.yaml'
 
 env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
   AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
 
 jobs:
