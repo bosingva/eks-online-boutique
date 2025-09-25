@@ -58,13 +58,15 @@ jobs:
         uses: azure/setup-kubectl@v4
         with:
           version:  v1.33.0  
+      
+      - name: Debug AWS identity
+        run: aws sts get-caller-identity
 
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
             --region $AWS_DEFAULT_REGION \
             --name online-boutique-eks \
-            --role-arn $AWS_ROLE_TO_ASSUME  
 
       - name: Apply ArgoCD Application
         run: |
