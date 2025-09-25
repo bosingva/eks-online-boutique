@@ -73,7 +73,7 @@ jobs:
           kubectl apply -f online-boutique-argo-app.yaml -n argocd
 
       - name: Wait 10 minutes
-        run: sleep 600
+        run: sleep 900
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
