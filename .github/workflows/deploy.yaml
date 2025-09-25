@@ -20,6 +20,8 @@ jobs:
       contents: read
     container:
       image: hashicorp/terraform:1.6.0
+    env:               # 👈 here
+      TF_VAR_gitops_password: ${{ secrets.GITOPS_PASSWORD }}
 
     steps:
       - name: Checkout code
@@ -41,8 +43,6 @@ jobs:
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
-        env:
-          TF_VAR_gitops_password: ${{ secrets.GITOPS_PASSWORD }}      
         run: terraform apply -auto-approve tfplan
 
       - name: Setup kubectl
@@ -53,7 +53,7 @@ jobs:
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
-            --region $AWS_REGION \
+            --region $AWS_DEFAULT_REGION \
             --name online-boutique-eks \
             --role-arn $AWS_ROLE_TO_ASSUME  
 
