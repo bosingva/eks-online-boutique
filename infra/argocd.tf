@@ -18,6 +18,12 @@ resource "helm_release" "argocd" {
   version          = "6.4.0"
   namespace        = "argocd"
   create_namespace = true
+
+  timeout          = 600          # wait up to 10 minutes
+  wait             = true         # wait for pods to be ready
+  atomic           = true         # rollback if it fails
+  cleanup_on_fail  = true         # cleanup failed release
+  
   depends_on       = [module.eks, module.eks_blueprints_addons]
 }
 
