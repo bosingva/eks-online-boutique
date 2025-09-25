@@ -11,7 +11,6 @@ on:
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-  GITOPS_PASSWORD: ${{ secrets.GITOPS_PASSWORD }}
 
 jobs:
   terraform_apply:
@@ -61,3 +60,8 @@ jobs:
             --region $AWS_REGION \
             --name online-boutique-eks \
             --role-arn $AWS_ROLE_TO_ASSUME  
+
+      - name: Apply ArgoCD Application
+        run: |
+          kubectl apply -f online-boutique-argo-app.yaml -n argocd
+
