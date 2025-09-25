@@ -18,7 +18,7 @@ resource "helm_release" "argocd" {
   version          = "6.4.0"
   namespace        = "argocd"
   create_namespace = true
-  depends_on       = [module.eks]
+  depends_on       = [module.eks, module.eks_blueprints_addons]
 }
 
 resource "kubernetes_secret" "argocd_gitops_repo" {
