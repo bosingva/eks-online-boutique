@@ -21,10 +21,6 @@ jobs:
     container:
       image: hashicorp/terraform:1.6.0
 
-    defaults:
-      run:
-        working-directory: infrastructure
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
