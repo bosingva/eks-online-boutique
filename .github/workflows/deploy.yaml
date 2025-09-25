@@ -23,6 +23,10 @@ jobs:
     env:               
       TF_VAR_gitops_password: ${{ secrets.GITOPS_PASSWORD }}
 
+    defaults:
+      run:
+        working-directory: infra
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
