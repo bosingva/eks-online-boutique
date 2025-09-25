@@ -26,6 +26,19 @@ resource "kubernetes_cluster_role" "cluster_viewer" {
     resources  = ["*"]
     verbs      = ["get", "list", "watch", "describe"]
   }
+
+    rule {
+    api_groups = ["metrics.k8s.io"]
+    resources  = ["pods", "nodes"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+    rule {
+    api_groups = [""]
+    resources = ["pods/portforward"]
+    verbs = ["get", "list", "create"]
+  }
+
 }
 
 resource "kubernetes_cluster_role_binding" "cluster_viewer" {

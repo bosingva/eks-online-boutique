@@ -46,10 +46,40 @@ module "eks" {
     initial = {
       instance_types = ["t3.micro"]
       min_size     = 1
-      max_size     = 5
+      max_size     = 10
       desired_size = 2
     }
   }
 
   tags = var.tags
+}
+
+module "eks_blueprints_addons" {
+  source = "aws-ia/eks-blueprints-addons/aws"
+  version = "1.22.0"
+  
+  cluster_name      = module.eks.cluster_name
+  cluster_endpoint  = module.eks.cluster_endpoint
+  cluster_version   = module.eks.cluster_version
+  oidc_provider_arn = module.eks.oidc_provider_arn
+
+  enable_aws_load_balancer_controller    = true
+  enable_metrics_server                  = true
+  enable_cluster_autoscaler              = true
+  cluster_autoscaler = {
+    set = [
+      {
+        name = "extraArgs.scale-down-unneeded-time"
+        value = "1m"
+      },
+      {
+        name = "extraArgs.skip-nodes-with-local-storage"
+        value = false
+      },
+      {
+        name = "extraArgs.skip-nodes-with-system-pods"
+        value = false
+      }
+    ]
+  }
 }

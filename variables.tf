@@ -25,3 +25,15 @@ variable "user_for_admin_role" {
   default     = "arn:aws:iam::815254799658:user/dika"
   
 }
+
+variable "gitops_url" {
+  description = "The URL of the Git repository"
+  type        = string
+  default     = ""
+}
+
+variable "gitops_password" {
+  description = "The GitHub token for accessing the repository"
+  type        = string
+  sensitive   = true  
+}

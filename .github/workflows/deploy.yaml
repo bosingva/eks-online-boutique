@@ -1,0 +1,63 @@
+name: Insfrastrucure Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.'
+      - '.github/workflows/deploy.yaml'
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+  GITOPS_PASSWORD: ${{ secrets.GITOPS_PASSWORD }}
+
+jobs:
+  terraform_apply:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    container:
+      image: hashicorp/terraform:1.6.0
+
+    defaults:
+      run:
+        working-directory: infrastructure
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}  
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        env:
+          TF_VAR_gitops_password: ${{ secrets.GITOPS_PASSWORD }}      
+        run: terraform apply -auto-approve tfplan
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version:  v1.33.0  
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region $AWS_REGION \
+            --name online-boutique-eks \
+            --role-arn $AWS_ROLE_TO_ASSUME  
