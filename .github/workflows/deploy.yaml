@@ -10,7 +10,6 @@ on:
 
 env:
   AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
-  AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
 
 jobs:
   terraform_apply:
@@ -19,7 +18,10 @@ jobs:
       id-token: write
       contents: read
     container:
-      image: cytopia/terraform-awscli-helm-kubectl:3.9
+      image: korgala/aws_helm_terra
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
     env:               
       TF_VAR_gitops_password: ${{ secrets.GITOPS_PASSWORD }}
 
@@ -35,7 +37,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ env.AWS_DEFAULT_REGION }}  
+          aws-region: ${{ vars.AWS_DEFAULT_REGION }}  
 
       # - name: Install AWS CLI
       #   run: |
