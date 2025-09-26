@@ -35,5 +35,5 @@ variable "gitops_url" {
 variable "gitops_password" {
   description = "The GitHub token for accessing the repository"
   type        = string
-  sensitive   = true  
+  sensitive = true
 }

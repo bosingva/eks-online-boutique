@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '.'
+      - 'infra/**'
       - '.github/workflows/deploy.yaml'
 
 env:
@@ -19,7 +19,7 @@ jobs:
       id-token: write
       contents: read
     container:
-      image: hashicorp/terraform:1.6.0
+      image: cytopia/terraform-awscli-helm-kubectl:3.9
     env:               
       TF_VAR_gitops_password: ${{ secrets.GITOPS_PASSWORD }}
 
@@ -35,12 +35,12 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ vars.AWS_DEFAULT_REGION }}  
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}  
 
-      - name: Install AWS CLI
-        run: |
-          apk add --no-cache python3 py3-pip groff less
-          pip3 install awscli      
+      # - name: Install AWS CLI
+      #   run: |
+      #     apk add --no-cache python3 py3-pip groff less
+      #     pip3 install awscli      
 
       - name: Terraform Init
         run: terraform init
@@ -51,29 +51,29 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
-      # - name: Terraform Apply
-      #   run: terraform apply -auto-approve tfplan
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
 
       # - name: Setup kubectl
       #   uses: azure/setup-kubectl@v4
       #   with:
       #     version:  v1.33.0  
       
-      # - name: Debug AWS identity
-      #   run: aws sts get-caller-identity
+      - name: Debug AWS identity
+        run: aws sts get-caller-identity
 
-      # - name: Update kubeconfig
-      #   run: |
-      #     aws eks update-kubeconfig \
-      #       --region $AWS_DEFAULT_REGION \
-      #       --name online-boutique-eks \
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region $AWS_DEFAULT_REGION \
+            --name online-boutique-eks \
 
-      # - name: Apply ArgoCD Application
-      #   run: |
-      #     kubectl apply -f online-boutique-argo-app.yaml -n argocd
+      - name: Apply ArgoCD Application
+        run: |
+          kubectl apply -f online-boutique-argo-app.yaml -n argocd
 
-      # - name: Wait 10 minutes
-      #   run: sleep 900
+      - name: Wait 10 minutes
+        run: sleep 900
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
