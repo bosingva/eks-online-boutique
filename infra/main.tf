@@ -44,9 +44,9 @@ module "eks" {
   
   eks_managed_node_groups = {
     initial = {
-      instance_types = ["t3.micro"]
+      instance_types = ["t3.small"]
       min_size     = 1
-      max_size     = 15
+      max_size     = 20
       desired_size = 2
     }
   }
@@ -84,3 +84,15 @@ module "eks_blueprints_addons" {
     ]
   }
 }
+
+# module "external_secrets_addon" {
+#   source  = "github.com/aws-ia/terraform-aws-eks-blueprints-addons//modules/external-secrets?ref=v1.22.0"
+#   version = "1.22.0"
+
+#   cluster_name      = module.eks.cluster_name
+#   cluster_endpoint  = module.eks.cluster_endpoint
+#   cluster_version   = module.eks.cluster_version
+#   oidc_provider_arn = module.eks.oidc_provider_arn
+
+#   depends_on = [ module.eks, module.eks_blueprints_addons ] 
+# }
