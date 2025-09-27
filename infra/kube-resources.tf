@@ -39,6 +39,18 @@ resource "kubernetes_cluster_role" "cluster_viewer" {
     verbs = ["get", "list", "create"]
   }
 
+    rule {
+    api_groups = ["apiextensions.k8s.io"]
+    resources = ["customresourcedefinitions"]
+    verbs = ["get", "list", "describe", "create", "update", "patch", "delete"]
+  }
+      rule {
+    api_groups = ["argoproj.io"]
+    resources = ["applications"]
+    verbs = ["get", "list", "describe", "create", "update", "patch", "delete"]
+  }
+
+
 }
 
 resource "kubernetes_cluster_role_binding" "cluster_viewer" {
@@ -59,3 +71,14 @@ resource "kubernetes_cluster_role_binding" "cluster_viewer" {
   }
 }
 
+resource "kubernetes_service_account" "externalsecrets-sa" {
+  depends_on = [ aws_iam_role.externalsecrets-role ]
+  metadata {
+    name = "externalsecrets-sa"
+    namespace = "online-boutique"
+
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.externalsecrets-role.arn
+    }
+  }
+}

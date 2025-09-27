@@ -46,7 +46,7 @@ module "eks" {
     initial = {
       instance_types = ["t3.micro"]
       min_size     = 1
-      max_size     = 10
+      max_size     = 15
       desired_size = 2
     }
   }
@@ -66,6 +66,7 @@ module "eks_blueprints_addons" {
   enable_aws_load_balancer_controller    = true
   enable_metrics_server                  = true
   enable_cluster_autoscaler              = true
+  enable_external_secrets                = true
   cluster_autoscaler = {
     set = [
       {
