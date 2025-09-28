@@ -1,4 +1,4 @@
-name: Insfrastrucure Deploy
+name: Insfrastrucure destroy
 
 on:
   workflow_dispatch:
