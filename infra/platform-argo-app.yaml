@@ -7,7 +7,7 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: online-boutique
+    namespace: default
   source:
     repoURL: https://github.com/bosingva/online-boutique-app.git
     path: platform

@@ -35,22 +35,6 @@ module "eks" {
   manage_aws_auth_configmap = true
   aws_auth_roles = local.aws_k8s_role_mapping
 
-  
-  cluster_addons = {
-    kube-proxy = {}
-    vpc-cni    = {}
-    coredns = {}
-  }
-  
-  eks_managed_node_groups = {
-    initial = {
-      instance_types = ["t3.small"]
-      min_size     = 1
-      max_size     = 20
-      desired_size = 2
-    }
-  }
-
   tags = var.tags
 }
 
@@ -63,10 +47,24 @@ module "eks_blueprints_addons" {
   cluster_version   = module.eks.cluster_version
   oidc_provider_arn = module.eks.oidc_provider_arn
 
+    eks_addons = {
+    aws-ebs-csi-driver = {
+      most_recent = true
+    }
+    coredns = {
+      most_recent = true
+    }
+    vpc-cni = {
+      most_recent = true
+    }
+    kube-proxy = {
+      most_recent = true
+    }
+  }
+
   enable_aws_load_balancer_controller    = true
   enable_metrics_server                  = true
   enable_cluster_autoscaler              = true
-  enable_external_secrets                = true
   cluster_autoscaler = {
     set = [
       {
@@ -84,15 +82,3 @@ module "eks_blueprints_addons" {
     ]
   }
 }
-
-# module "external_secrets_addon" {
-#   source  = "github.com/aws-ia/terraform-aws-eks-blueprints-addons//modules/external-secrets?ref=v1.22.0"
-#   version = "1.22.0"
-
-#   cluster_name      = module.eks.cluster_name
-#   cluster_endpoint  = module.eks.cluster_endpoint
-#   cluster_version   = module.eks.cluster_version
-#   oidc_provider_arn = module.eks.oidc_provider_arn
-
-#   depends_on = [ module.eks, module.eks_blueprints_addons ] 
-# }

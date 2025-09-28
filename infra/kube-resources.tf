@@ -50,7 +50,6 @@ resource "kubernetes_cluster_role" "cluster_viewer" {
     verbs = ["get", "list", "describe", "create", "update", "patch", "delete"]
   }
 
-
 }
 
 resource "kubernetes_cluster_role_binding" "cluster_viewer" {

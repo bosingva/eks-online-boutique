@@ -10,7 +10,7 @@ variable name {
 }
 
 variable k8s_version {
-    default = "1.33"
+    default = "1.32"
 }
 
 variable tags {
@@ -35,6 +35,5 @@ variable "gitops_url" {
 variable "gitops_password" {
   description = "The GitHub token for accessing the repository"
   type        = string
-  default = "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"
-  # sensitive = true
+  sensitive   = true
 }
