@@ -2,11 +2,6 @@ name: Insfrastrucure Deploy
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
-    paths:
-      - 'infra/**'
-      - '.github/workflows/deploy.yaml'
 
 env:
   AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
@@ -47,26 +42,6 @@ jobs:
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
-      
-      - name: Debug AWS identity
-        run: aws sts get-caller-identity
-
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig \
-            --region $AWS_DEFAULT_REGION \
-            --name online-boutique-eks \
-
-      - name: Apply ArgoCD Application
-        run: |
-          kubectl apply -f online-boutique-argo-app.yaml
-          kubectl apply -f platform-argo-app.yaml
-
-      - name: Wait 10 minutes
-        run: sleep 900
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
