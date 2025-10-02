@@ -43,6 +43,17 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region $AWS_DEFAULT_REGION \
+            --name online-boutique-eks \
+
+      - name: Apply ArgoCD Application
+        run: |
+          kubectl delete -f online-boutique-argo-app.yaml
+          kubectl delete -f platform-argo-app.yaml
+
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
 
