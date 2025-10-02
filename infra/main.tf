@@ -9,7 +9,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
 
-  name = var.name
+  name = var.vpc_name
   cidr = var.vpc_cidr_block
 
   azs             = data.aws_availability_zones.azs.names
@@ -37,7 +37,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
-  cluster_name                   = var.name
+  cluster_name                   = var.eks_cluster_name
   cluster_version                = var.k8s_version
   cluster_endpoint_public_access = true
   
@@ -78,7 +78,7 @@ node_security_group_additional_rules = {
     from_port   = 15017
     to_port     = 15017
     type        = "ingress"
-    source_cluster_security_group         = true
+    source_cluster_security_group = true
   }
     ingress_15012 = {
     description = "Cluster API to nodes ports/protocols"
@@ -86,7 +86,7 @@ node_security_group_additional_rules = {
     from_port   = 15012
     to_port     = 15012
     type        = "ingress"
-    source_cluster_security_group         = true
+    source_cluster_security_group = true
   }
     ingress_15090 = {
     description                   = "Istio Envoy Prometheus metrics"

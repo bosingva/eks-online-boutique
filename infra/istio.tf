@@ -1,13 +1,3 @@
-resource "helm_release" "istiod" {
-  name       = "istiod"
-  chart      = "istiod"
-  version    = "1.21.0"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  namespace  = "istio-system"
-  create_namespace = true
-  depends_on = [ module.vpc, module.eks, module.eks_blueprints_addons]
-}
-
 resource "helm_release" "istio-base" {
   name       = "istio-base"
   chart      = "base"
@@ -15,7 +5,24 @@ resource "helm_release" "istio-base" {
   repository = "https://istio-release.storage.googleapis.com/charts"
   namespace  = "istio-system"
   create_namespace = true
-  depends_on = [ module.vpc, module.eks, module.eks_blueprints_addons ]
+  
+  depends_on = [
+    module.eks,
+    module.eks_blueprints_addons
+  ]
+}
+
+resource "helm_release" "istiod" {
+  name       = "istiod"
+  chart      = "istiod"
+  version    = "1.21.0"
+  repository = "https://istio-release.storage.googleapis.com/charts"
+  namespace  = "istio-system"
+  create_namespace = true
+  
+  depends_on = [
+    helm_release.istio-base  
+  ]
 }
 
 resource "helm_release" "istio-ingress" {
@@ -26,21 +33,19 @@ resource "helm_release" "istio-ingress" {
   namespace  = "istio-ingress"
   create_namespace = true
   
-  depends_on = [ 
-    module.vpc, 
-    module.eks,
-    module.eks_blueprints_addons, 
+  depends_on = [
+    helm_release.istiod,  
     aws_security_group.istio-gateway-lb
-     ]
+  ]
 
-  values = [ templatefile("istio-ingress-values.yaml.tftpl", {
+  values = [templatefile("istio-ingress-values.yaml.tftpl", {
     lb_security_group_id = aws_security_group.istio-gateway-lb.id
-  }) ]
+  })]
 }
 
 resource "aws_security_group" "istio-gateway-lb" {
-    name = "istio-ingress"
-    vpc_id = module.vpc.vpc_id
+  name   = "istio-ingress"
+  vpc_id = module.vpc.vpc_id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "lb-http" {
@@ -62,5 +67,5 @@ resource "aws_vpc_security_group_ingress_rule" "lb-https" {
 resource "aws_vpc_security_group_egress_rule" "allow-all-traffic-ipv4" {
   security_group_id = aws_security_group.istio-gateway-lb.id
   cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1" 
+  ip_protocol       = "-1"
 }

@@ -38,7 +38,7 @@ resource "kubernetes_secret" "argocd_gitops_repo" {
   data = {
     type: "git"
     url: "https://github.com/bosingva/online-boutique-app.git"
-    username: "git"
+    username: var.user_name_git
     password: var.gitops_password
   }
 

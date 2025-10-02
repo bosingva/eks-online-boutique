@@ -1,5 +1,10 @@
 labels:
   istio: ingressgateway
+image:
+  repository: docker.io/istio/proxyv2
+  tag: 1.21.0
+  pullPolicy: IfNotPresent
+
 
 
 service:
@@ -13,3 +18,8 @@ service:
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "TCP"
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "traffic-port"
 
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
