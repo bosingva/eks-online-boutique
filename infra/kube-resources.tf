@@ -3,7 +3,7 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
 
   exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
+    api_version = "client.authentication.k8s.io/v1"
     command = "aws"
     args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
   }
@@ -11,8 +11,12 @@ provider "kubernetes" {
 
 resource "kubernetes_namespace" "online-boutique" {
   metadata {
-    name = "online-boutique"
+    name = "online-boutique"  
+    labels = {
+      "istio-injection" = "enabled"
+    }
   }
+  depends_on = [ module.eks, module.vpc ]
 }
 
 
@@ -49,6 +53,24 @@ resource "kubernetes_cluster_role" "cluster_viewer" {
     resources = ["applications"]
     verbs = ["get", "list", "describe", "create", "update", "patch", "delete"]
   }
+    rule {
+    api_groups = ["security.istio.io"]
+    resources = ["peerauthentications"]
+    verbs = ["get", "list", "describe"]
+  }
+
+  rule {
+    api_groups = [""]
+    resources = ["pods/exec", "pods/attach"]
+    verbs = ["get", "list", "create"]
+  }
+  
+  rule {
+    api_groups = [""]
+    resources = ["pods"]
+    verbs = ["get", "list", "create", "describe", "delete", "update"]
+  }
+  depends_on = [ module.eks, module.vpc ]
 
 }
 
@@ -68,10 +90,12 @@ resource "kubernetes_cluster_role_binding" "cluster_viewer" {
     name      = "admin"
     api_group = "rbac.authorization.k8s.io"
   }
+  depends_on = [ module.eks, module.vpc ]
+
 }
 
 resource "kubernetes_service_account" "externalsecrets-sa" {
-  depends_on = [ aws_iam_role.externalsecrets-role ]
+  depends_on = [ aws_iam_role.externalsecrets-role, module.eks, module.vpc ]
   metadata {
     name = "externalsecrets-sa"
     namespace = "online-boutique"
@@ -80,4 +104,5 @@ resource "kubernetes_service_account" "externalsecrets-sa" {
       "eks.amazonaws.com/role-arn" = aws_iam_role.externalsecrets-role.arn
     }
   }
+  
 }

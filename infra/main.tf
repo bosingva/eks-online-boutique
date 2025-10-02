@@ -3,37 +3,50 @@ provider "aws" {
   
 }
 
-data "aws_vpc" "default" {
-  default = true
+data "aws_availability_zones" "azs" {}
+
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 5.0"
+
+  name = var.name
+  cidr = var.vpc_cidr_block
+
+  azs             = data.aws_availability_zones.azs.names
+  private_subnets = var.private_subnet_cidr_blocks
+  public_subnets  = var.public_subnet_cidr_blocks
+
+  enable_nat_gateway = true
+  single_nat_gateway = true
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = 1
+    "kubernetes.io/cluster/online-boutique-eks" = "shared"
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb" = 1
+    "kubernetes.io/cluster/online-boutique-eks" = "shared"
+  }
+
+  tags = var.tags
 }
 
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-  filter {
-    name   = "availability-zone"
-    values = ["us-east-1a", "us-east-1b", "us-east-1c", "us-east-1d", "us-east-1f"]
-  }
-}
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.16"
+  version = "~> 20.0"
 
   cluster_name                   = var.name
   cluster_version                = var.k8s_version
   cluster_endpoint_public_access = true
   
-  vpc_id     = data.aws_vpc.default.id
-  subnet_ids = data.aws_subnets.default.ids
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
 
-  create_cluster_security_group = false
-  create_node_security_group    = false
-
-  manage_aws_auth_configmap = true
-  aws_auth_roles = local.aws_k8s_role_mapping
+  create_cluster_security_group = true
+  create_node_security_group    = true
+  enable_cluster_creator_admin_permissions = true
   
     eks_managed_node_groups = {
     initial = {
@@ -42,9 +55,64 @@ module "eks" {
       max_size     = 10
       desired_size = 4
     }
+    istio = {
+      instance_types = ["t3.medium"]
+      min_size     = 2
+      max_size     = 10
+      desired_size = 4
+    }
   }
 
+node_security_group_additional_rules = {
+  ingress_istio_sg = {
+    description              = "LB port forward to nodes (NodePorts 30000-32767)"
+    protocol                 = "TCP"
+    from_port                = 30000
+    to_port                  = 32767
+    type                     = "ingress"
+    source_security_group_id = aws_security_group.istio-gateway-lb.id
+  }
+    ingress_15017 = {
+    description = "Cluster API to Istio Webhook (sidecar-injector.istio.io)"
+    protocol    = "TCP"
+    from_port   = 15017
+    to_port     = 15017
+    type        = "ingress"
+    source_cluster_security_group         = true
+  }
+    ingress_15012 = {
+    description = "Cluster API to nodes ports/protocols"
+    protocol    = "TCP"
+    from_port   = 15012
+    to_port     = 15012
+    type        = "ingress"
+    source_cluster_security_group         = true
+  }
+    ingress_15090 = {
+    description                   = "Istio Envoy Prometheus metrics"
+    protocol                      = "tcp"
+    from_port                     = 15090
+    to_port                       = 15090
+    type                          = "ingress"
+    source_cluster_security_group = true
+  }
+  
+}
+
+  depends_on = [ module.vpc ]
+
   tags = var.tags
+}
+
+module "aws_auth" {
+  source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
+  version = "~> 20.0"
+
+  manage_aws_auth_configmap = true
+
+  aws_auth_roles = local.aws_k8s_role_mapping
+  
+  depends_on = [ module.eks ]
 }
 
 module "eks_blueprints_addons" {
@@ -90,4 +158,5 @@ module "eks_blueprints_addons" {
       }
     ]
   }
+  depends_on = [module.aws_auth ]
 }
