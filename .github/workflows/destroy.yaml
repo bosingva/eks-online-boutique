@@ -56,4 +56,5 @@ jobs:
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
+        timeout-minutes: 30
 
