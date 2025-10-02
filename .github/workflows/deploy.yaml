@@ -2,11 +2,11 @@ name: Insfrastrucure Deploy
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
-    paths:
-      - 'infra/**'
-      - '.github/workflows/deploy.yaml'
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'infra/**'
+  #     - '.github/workflows/deploy.yaml'
 
 env:
   AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
@@ -70,4 +70,5 @@ jobs:
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
+        timeout-minutes: 30
 

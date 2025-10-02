@@ -15,6 +15,38 @@ This project demonstrates enterprise-grade Kubernetes infrastructure with:
 - **Auto-scaling**: Cluster Autoscaler and Horizontal Pod Autoscaling
 - **Load Balancing**: AWS Network Load Balancer with health checks
 
+## GitOps Application Repository
+
+This infrastructure is designed to work with the GitOps application repository:
+
+**Repository**: [online-boutique-app](https://github.com/bosingva/online-boutique-app)
+
+The application repository contains:
+- Kubernetes manifests for the microservices application
+- Istio configuration (Gateway, VirtualService, AuthorizationPolicies)
+- External Secrets configuration for AWS Secrets Manager integration
+- OPA Gatekeeper policies for security enforcement
+- Kustomize overlays for environment-specific configuration
+
+### How They Work Together
+
+```
+eks-online-boutique (Infrastructure)          online-boutique-app (Application)
+├── VPC and Networking              ←─────   Deployed into this infrastructure
+├── EKS Cluster                     ←─────   
+├── Istio (base, istiod, gateway)   ←─────   Uses Gateway and routing rules
+├── ArgoCD                          ─────→   Watches this Git repository
+├── External Secrets Operator       ←─────   Syncs secrets defined here
+└── OPA Gatekeeper                  ←─────   Enforces policies defined here
+```
+
+### Deployment Flow
+
+1. **Infrastructure deployment** (this repo): Creates EKS cluster, Istio, ArgoCD
+2. **ArgoCD Application creation**: Points to `online-boutique-app` repository
+3. **GitOps sync**: ArgoCD automatically deploys application from Git
+4. **Continuous deployment**: Changes to `online-boutique-app` auto-sync to cluster
+
 ## Infrastructure Components
 
 ### Networking
@@ -164,14 +196,26 @@ kubectl apply -f platform-argo-app.yaml
 kubectl get applications -n argocd -w
 ```
 
-### Step 8: Access the Application
+### Step 8: Verify Application Deployment
 
 ```bash
+# Check application pods
+kubectl get pods -n online-boutique
+
+# Check Istio sidecars are injected (should see 2/2 READY)
+kubectl get pods -n online-boutique -o wide
+
+# Check External Secrets are synced
+kubectl get externalsecrets -n online-boutique
+
+# Check Gatekeeper policies are enforced
+kubectl get constraints
+
 # Get the load balancer URL
 kubectl get svc -n istio-ingress
-
-# Access the application via the NLB DNS name
 ```
+
+**Note**: The application manifests are managed in the [online-boutique-app](https://github.com/bosingva/online-boutique-app) repository. Any application changes should be made there, not in this infrastructure repository.
 
 ## Key Features Explained
 
@@ -351,13 +395,18 @@ terraform destroy
 - [External Secrets Operator](https://external-secrets.io/)
 - [OPA Gatekeeper](https://open-policy-agent.github.io/gatekeeper/)
 
+## Related Repositories
+
+- **Application Manifests**: [online-boutique-app](https://github.com/bosingva/online-boutique-app) - Kubernetes manifests and GitOps configuration
+- **Original Application**: [Google Cloud Microservices Demo](https://github.com/GoogleCloudPlatform/microservices-demo) - Source application code
+
 ## License
 
 MIT License - Feel free to use this as a reference for your own projects
 
 ## Contact
 
-For questions or collaboration opportunities, please reach out via [LinkedIn](https://www.linkedin.com/in/dimitri-korgalidze-73030b169/).
+For questions or collaboration opportunities, please reach out via [GitHub](https://github.com/bosingva) or [LinkedIn](your-linkedin-profile).
 
 ---
 
