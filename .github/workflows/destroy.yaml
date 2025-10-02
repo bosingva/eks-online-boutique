@@ -40,10 +40,10 @@ jobs:
             --region $AWS_DEFAULT_REGION \
             --name online-boutique-eks \
 
-      - name: delete ArgoCD Application
-        run: |
-          kubectl delete -f online-boutique-argo-app.yaml
-          kubectl delete -f platform-argo-app.yaml
+      # - name: delete ArgoCD Application
+      #   run: |
+      #     kubectl delete -f online-boutique-argo-app.yaml
+      #     kubectl delete -f platform-argo-app.yaml
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
