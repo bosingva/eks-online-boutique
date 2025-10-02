@@ -32,7 +32,11 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ vars.AWS_DEFAULT_REGION }}      
+          aws-region: ${{ vars.AWS_DEFAULT_REGION }}   
+
+
+      - name: Terraform Init
+        run: terraform init       
 
       - name: Update kubeconfig
         run: |
