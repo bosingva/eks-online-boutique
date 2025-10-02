@@ -35,7 +35,7 @@ resource "helm_release" "istio-ingress" {
   
   depends_on = [
     helm_release.istiod,  
-    aws_security_group.istio-gateway-lb
+    aws_security_group.istio-gateway-lb,
     time_sleep.wait_for_gatekeeper
   ]
 
