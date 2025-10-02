@@ -49,7 +49,7 @@ jobs:
             --region $AWS_DEFAULT_REGION \
             --name online-boutique-eks \
 
-      - name: Apply ArgoCD Application
+      - name: delete ArgoCD Application
         run: |
           kubectl delete -f online-boutique-argo-app.yaml
           kubectl delete -f platform-argo-app.yaml
