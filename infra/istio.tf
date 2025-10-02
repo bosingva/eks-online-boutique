@@ -36,6 +36,7 @@ resource "helm_release" "istio-ingress" {
   depends_on = [
     helm_release.istiod,  
     aws_security_group.istio-gateway-lb
+    time_sleep.wait_for_gatekeeper
   ]
 
   values = [templatefile("istio-ingress-values.yaml.tftpl", {
