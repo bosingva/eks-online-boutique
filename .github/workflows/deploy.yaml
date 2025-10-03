@@ -1,18 +1,13 @@
-name: Insfrastrucure Deploy
+name: Infrastructure Deploy
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [ main ]
-  #   paths:
-  #     - 'infra/**'
-  #     - '.github/workflows/deploy.yaml'
 
 env:
   AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
 
 jobs:
-  terraform_apply:
+  terraform_deploy:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -51,24 +46,32 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
       
-      - name: Debug AWS identity
-        run: aws sts get-caller-identity
-
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
             --region $AWS_DEFAULT_REGION \
-            --name online-boutique-eks \
+            --name online-boutique-eks
 
-      - name: Apply ArgoCD Application
+      - name: Apply ArgoCD Applications
         run: |
           kubectl apply -f online-boutique-argo-app.yaml
           kubectl apply -f platform-argo-app.yaml
 
-      - name: Wait 10 minutes
-        run: sleep 900
+      - name: Verify Deployment
+        run: |
+          echo "Waiting for resources to initialize..."
+          sleep 60
+          echo "=== ArgoCD Applications ==="
+          kubectl get applications -n argocd
+          echo "=== Istio Pods ==="
+          kubectl get pods -n istio-system
+          echo "=== Application Pods ==="
+          kubectl get pods -n online-boutique
 
-      - name: Terraform Destroy
-        run: terraform destroy -auto-approve
-        timeout-minutes: 30
-
+      - name: Get Access Information
+        run: |
+          echo "=== Load Balancer URL ==="
+          kubectl get svc -n istio-ingress
+          echo ""
+          echo "=== ArgoCD Admin Password ==="
+          echo "Run: kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 --decode"

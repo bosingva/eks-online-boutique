@@ -1,13 +1,19 @@
-name: Insfrastrucure destroy
+name: Infrastructure Destroy
 
 on:
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "destroy" to confirm'
+        required: true
+        type: string
 
 env:
   AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
 
 jobs:
-  terraform_apply:
+  terraform_destroy:
+    if: github.event.inputs.confirm == 'destroy'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -32,24 +38,31 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ vars.AWS_DEFAULT_REGION }}   
+          aws-region: ${{ vars.AWS_DEFAULT_REGION }}
 
+      - name: Pre-cleanup Kubernetes Resources
+        run: |
+          echo "Updating kubeconfig..."
+          aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name online-boutique-eks || true
+          
+          echo "Deleting ArgoCD applications..."
+          kubectl delete applications --all -n argocd --timeout=5m || true
+          
+          echo "Deleting ExternalSecrets..."
+          kubectl delete externalsecrets --all -A --timeout=5m || true
+          
+          echo "Waiting for finalizers to clear..."
+          sleep 30
 
       - name: Terraform Init
-        run: terraform init       
-
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig \
-            --region $AWS_DEFAULT_REGION \
-            --name online-boutique-eks \
-
-      # - name: delete ArgoCD Application
-      #   run: |
-      #     kubectl delete -f online-boutique-argo-app.yaml
-      #     kubectl delete -f platform-argo-app.yaml
+        run: terraform init
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
         timeout-minutes: 30
 
+      - name: Verify Destruction
+        if: always()
+        run: |
+          echo "Checking for remaining resources..."
+          aws eks list-clusters --region $AWS_DEFAULT_REGION || echo "EKS cleanup complete"
