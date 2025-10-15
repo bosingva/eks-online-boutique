@@ -196,24 +196,6 @@ kubectl apply -f platform-argo-app.yaml
 kubectl get applications -n argocd -w
 ```
 
-### Step 8: Verify Application Deployment
-
-```bash
-# Check application pods
-kubectl get pods -n online-boutique
-
-# Check Istio sidecars are injected (should see 2/2 READY)
-kubectl get pods -n online-boutique -o wide
-
-# Check External Secrets are synced
-kubectl get externalsecrets -n online-boutique
-
-# Check Gatekeeper policies are enforced
-kubectl get constraints
-
-# Get the load balancer URL
-kubectl get svc -n istio-ingress
-```
 
 **Note**: The application manifests are managed in the [online-boutique-app](https://github.com/bosingva/online-boutique-app) repository. Any application changes should be made there, not in this infrastructure repository.
 
@@ -269,63 +251,6 @@ spec:
       key: /path/to/secret
 ```
 
-## Cost Optimization
-
-**Current estimated monthly cost**: ~$300-400
-
-- EKS Control Plane: ~$73/month
-- 8 EC2 instances (t3.small/medium): ~$200-250/month
-- NAT Gateway: ~$32/month
-- Network Load Balancer: ~$16/month
-- Data transfer: Variable
-
-**Cost reduction strategies**:
-1. Use Spot instances for non-critical workloads
-2. Reduce node count during off-hours
-3. Use single NAT gateway (already implemented)
-4. Enable cluster autoscaler (already enabled)
-
-## Troubleshooting
-
-### Issue: Pods stuck in ImagePullBackOff
-
-```bash
-# Check pod details
-kubectl describe pod <pod-name> -n <namespace>
-
-# Common cause: Image specification issue
-# Solution: Verify image repository and tag in values files
-```
-
-### Issue: ArgoCD can't authenticate to Git
-
-```bash
-# Check repository secret
-kubectl get secret gitops-k8s-repo -n argocd -o yaml
-
-# Verify token has 'repo' scope
-# Regenerate token if needed and update secret
-```
-
-### Issue: NLB targets unhealthy
-
-```bash
-# Check Istio gateway pods
-kubectl get pods -n istio-ingress -o wide
-
-# Ensure pods are running on multiple nodes
-# Check security group rules allow NodePort range
-```
-
-### Issue: Cluster autoscaler not working
-
-```bash
-# Check autoscaler logs
-kubectl logs -n kube-system -l app.kubernetes.io/name=aws-cluster-autoscaler
-
-# Verify IAM permissions for autoscaler service account
-```
-
 ## Cleanup
 
 To destroy all infrastructure:
@@ -352,40 +277,10 @@ terraform destroy
 - Store sensitive values in AWS Secrets Manager or Parameter Store
 - Never commit credentials to Git (use `.gitignore`)
 - Use IAM roles instead of long-lived credentials
-- Enable AWS GuardDuty and Security Hub
 - Regularly update Kubernetes and Istio versions
 - Implement network policies for pod-to-pod communication
 - Use OPA Gatekeeper policies for compliance
 
-## Monitoring and Observability
-
-**Recommended additions**:
-- Prometheus + Grafana for metrics
-- EFK/ELK stack for logging
-- Jaeger for distributed tracing
-- Kiali for Istio visualization
-
-## Future Enhancements
-
-- [ ] Add Prometheus and Grafana
-- [ ] Implement network policies
-- [ ] Add cert-manager for TLS certificates
-- [ ] Implement backup solution with Velero
-- [ ] Add multiple NAT gateways for HA
-- [ ] Implement pod security standards
-- [ ] Add Falco for runtime security
-- [ ] Implement disaster recovery procedures
-
-## Technical Skills Demonstrated
-
-- **Cloud Infrastructure**: AWS VPC, EKS, IAM, Secrets Manager
-- **Infrastructure as Code**: Terraform with modules and best practices
-- **Container Orchestration**: Kubernetes deployment and operations
-- **Service Mesh**: Istio installation and configuration
-- **GitOps**: ArgoCD continuous deployment
-- **Security**: IRSA, OPA policies, secrets management
-- **Networking**: Load balancers, security groups, service mesh
-- **Automation**: Cluster autoscaling, self-healing deployments
 
 ## References
 
@@ -400,14 +295,9 @@ terraform destroy
 - **Application Manifests**: [online-boutique-app](https://github.com/bosingva/online-boutique-app) - Kubernetes manifests and GitOps configuration
 - **Original Application**: [Google Cloud Microservices Demo](https://github.com/GoogleCloudPlatform/microservices-demo) - Source application code
 
-## License
-
-MIT License - Feel free to use this as a reference for your own projects
 
 ## Contact
 
 For questions or collaboration opportunities, please reach out via [GitHub](https://github.com/bosingva) or [LinkedIn](your-linkedin-profile).
 
 ---
-
-**Note**: This is a demonstration project. For production use, implement additional security measures, monitoring, and disaster recovery procedures.
