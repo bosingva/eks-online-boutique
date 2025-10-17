@@ -298,6 +298,6 @@ terraform destroy
 
 ## Contact
 
-For questions or collaboration opportunities, please reach out via [GitHub](https://github.com/bosingva) or [LinkedIn](your-linkedin-profile).
+For questions or collaboration opportunities, please reach out via [GitHub](https://github.com/bosingva) or [LinkedIn](https://www.linkedin.com/in/dimitri-korgalidze-73030b169).
 
 ---
